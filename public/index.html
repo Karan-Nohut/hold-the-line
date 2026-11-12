@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hold the Line</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <header class="masthead">
+      <h1>Hold the Line</h1>
+      <p class="tagline">Practise resisting a phone scam, out loud, before a real one calls.</p>
+      <p id="mode-badge" class="badge" hidden></p>
+    </header>
+
+    <p id="notice" class="notice" role="status" hidden></p>
+
+    <!-- 1. Setup: pick a call and learn the made-up identity -->
+    <section id="screen-setup" class="screen">
+      <div class="card identity">
+        <h2>Who you are on this call</h2>
+        <p>Use only these made-up details. <strong>Never say your real information.</strong> The caller will try to get the four secrets below out of you.</p>
+        <dl id="identity-list"></dl>
+      </div>
+
+      <h2 class="section-title">Pick a call to practise</h2>
+      <div id="scenario-list" class="scenarios"></div>
+      <p class="hint">You talk, the caller talks back. Say "I'm hanging up" or press the red button to end the call. Then a coach tells you how it went.</p>
+    </section>
+
+    <!-- 2. The call -->
+    <section id="screen-call" class="screen" hidden>
+      <div class="card phone">
+        <p class="caller-label">Incoming call</p>
+        <p id="caller-name" class="caller-name">Unknown number</p>
+        <p id="call-timer" class="timer" aria-hidden="true">00:00</p>
+
+        <div id="orb" class="orb" data-state="ringing" aria-hidden="true"></div>
+        <p id="call-status" class="status" role="status" aria-live="polite">Ringing…</p>
+
+        <div class="call-buttons">
+          <button id="btn-answer" class="btn answer" type="button">Answer</button>
+          <button id="btn-hangup" class="btn hangup" type="button">Hang up</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Transcript</h2>
+        <div id="transcript" class="transcript" aria-live="polite"></div>
+        <form id="type-form" class="type-form" hidden>
+          <label for="type-input">No microphone? Type your reply instead</label>
+          <div class="type-row">
+            <input id="type-input" type="text" autocomplete="off" placeholder="Type what you would say">
+            <button class="btn small" type="submit">Say it</button>
+          </div>
+        </form>
+      </div>
+
+      <details class="card cheat">
+        <summary>Your made-up details</summary>
+        <dl id="identity-list-call"></dl>
+      </details>
+    </section>
+
+    <!-- 3. Debrief -->
+    <section id="screen-debrief" class="screen" hidden>
+      <div id="debrief-loading" class="card center">
+        <p class="status">Your coach is reviewing the call…</p>
+      </div>
+      <div id="debrief-body" hidden></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

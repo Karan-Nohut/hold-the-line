@@ -1,0 +1,20 @@
+{
+  "name": "hold-the-line",
+  "version": "1.0.0",
+  "description": "Voice AI scam-call practice partner: an AI plays a phone scammer, you practise resisting out loud, then get a spoken debrief.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0",
+    "@google/genai": "^3.1.0",
+    "zod": "^4.6.7"
+  },
+  "license": "MIT"
+}
