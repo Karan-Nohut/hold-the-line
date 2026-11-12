@@ -1,30 +1,45 @@
-# Hold the Line: a sparring partner for scam calls
+# Hold the Line
 
 **Track:** Security (with Real-Time Assistance)
 
-## What I built
+## What it is
 
-Hold the Line is a voice app where an AI plays a phone scammer and you practise resisting it out loud. You pick a call (a bank "fraud team", a grandchild in trouble, or an arrest-warrant threat), answer it, and talk. The caller responds to what you say and its tone shifts as the call goes on, from calm to stern, or from panicked to tearful. When you hang up, a coach voice gives you a score, shows how it was worked out, and gives you one sentence to say next time.
+Hold the Line lets you practise a scam call out loud. An AI plays the scammer, you answer, and you try to get through the call without giving anything away. There are three calls to pick from: someone from your bank's "fraud team", a grandchild who's been in an accident, and an officer saying there's a warrant out for your arrest over unpaid tax.
 
-## Who it is for
+When an AI key is set, the caller actually listens to what you say and changes how it talks as the call goes on. The bank caller starts out polite and gets colder every time you refuse. The grandchild gets more upset. Once you hang up, a coach tells you your score, shows you where the points came from, and gives you one line you could say next time.
 
-People who are most often targeted by phone scams, and their families: older adults, and the children and grandchildren who worry about them. A bank or phone carrier could also offer it to customers as a few minutes of practice.
+## Who it's for
 
-## The problem
+People who get scam calls and find it hard to cut off someone who sounds official or upset, and the family members who worry about them. I could also see a bank or phone network giving it to customers as a quick bit of practice.
 
-Most scam advice is a list of tips that people read calmly. Scam calls do not happen calmly. They work because a live voice is rushing you, sounding official and making you afraid, and under that pressure people who know the rules still break them. Knowing "never share a code" is different from being able to say "no, I'm hanging up" to someone who is insisting. That is a spoken reflex, and reflexes are built by rehearsal.
+## Why I built it
+
+Most scam advice is a list of tips, and you read it when nothing is happening. A scam call is the opposite. Someone is rushing you, they sound like they know what they're talking about, and they're trying to scare you. Knowing you shouldn't read out a code is one thing. Actually saying "no, I'm hanging up" to someone who won't stop talking is harder.
+
+I think saying it out loud a few times makes it easier to say for real, but I haven't tested that. If I took this further, it's the first thing I'd want to measure.
 
 ## Why voice
 
-A keyboard would not do this job. Typing gives you time to think, which is the one thing a scammer takes away. The pressure is carried by pace, tone and the awkwardness of cutting off someone who is speaking to you, so the practice has to be spoken and in real time. Silence matters too: if you freeze, the caller pushes into it. And the skill being trained is itself vocal. The app treats "I'm hanging up" as the winning move.
+If you type your replies, you get time to think, and taking that time away is the whole trick a scammer relies on. Most of the pressure is in the pace, the tone of voice and how awkward it feels to interrupt someone, so the practice has to be spoken. Going quiet counts as well: if you freeze, the caller fills the silence and pushes harder.
+
+That's the real-time part. The caller reacts to each thing you say as you say it, and you get your feedback the moment you hang up.
 
 ## How it works
 
-Speech recognition runs in the browser. A small Node server sends the conversation to an AI model, which plays the caller and tags each line with a tone; a neural voice then acts that tone. You play a made-up identity with four known "secrets", so nobody says real details aloud and the facts can be checked in code: a real secret is a leak, a made-up one is a bluff, and the caller is told when details "do not match", as a real scam would find out. The AI coach writes the feedback, but the score is calculated from a fixed rubric and the coach's quotes are checked against the transcript. If a key is missing, a free quota runs out or a request fails, the app falls back rather than breaking.
+The browser handles speech recognition (it needs Chrome or Edge), and a small Node server passes the conversation to Gemini or Claude, which plays the caller. Every line the model writes starts with a tone like `{urgent}` or `{tearful}`. By default the browser's built-in voice reads the line and speeds up or changes pitch to match. If you add an ElevenLabs key, a much more expressive voice reads it instead, filtered so it sounds like it's coming down a phone line.
 
-## What I would do next
+You play a made-up person, Sam Rivera, with four secrets on a card: a one-time code, the last four digits of a card, a PIN and a year of birth. Nobody has to say anything real into the microphone, and the code can check exactly whether a secret came out. Saying a real one counts as a leak. Making a number up counts as a bluff. The caller knows the real values, so if you give it a fake code it gets "rejected" and the caller pushes harder, which is what would happen on a real scam call.
 
-- **An interruptible caller.** It is still turn by turn. A speech-to-speech model would let the caller talk over you and let you cut in, which is how real pressure feels.
-- **Real phone calls.** Have it ring your actual phone, unannounced, some time in the next week. A drill you are not expecting is far closer to the real thing.
-- **Fresh scripts.** Feed the scenarios from current scam reports, so people rehearse what is going around now.
-- **Measure it.** Test whether people who rehearse resist better a month later than people who only read the usual tips.
+I didn't want an AI deciding the score on its own. Leaks are checked in code. The AI coach writes the feedback and answers three yes/no questions: did you agree to pay, did you question the caller, and did you say you'd check through a number you trust. Those answers are worth 30 of the 100 points, and the rest of the score is worked out in code from a fixed rubric. Anything the coach quotes gets checked against the transcript.
+
+If there's no key, the free quota runs out or a request fails, the app falls back to another model, then to a scripted caller, and to the browser voice for speech. It shouldn't ever cut out halfway through a call.
+
+## What I'd do next
+
+The caller is still turn by turn, so you can't talk over each other. A speech-to-speech model would fix that and would feel a lot closer to a real call.
+
+It would also be much more realistic if it rang your actual phone at some random point in the week, when you're not expecting it.
+
+I'd build the scenarios from recent scam reports, so people practise the scams that are actually going around.
+
+And I'd test whether it works: compare people who practised with it against people who only read the usual tips, and see who resists better a month later.
