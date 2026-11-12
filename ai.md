@@ -1,48 +1,47 @@
 # AI tools used
 
-## Summary
-
-| Tool | Used for |
+| Tool | What it was used for |
 |---|---|
-| Claude Code (desktop app, Claude Fable 5.2) | Reading the brief, proposing project ideas, writing the code and the documents, and testing in a browser |
-| Google Gemini API (`gemini-3.5-flash-lite`, `gemini-3.5-flash` and others in rotation) | Runs inside the product: plays the scam caller and writes the coaching |
-| ElevenLabs API (optional, `eleven_v4_turbo`) | Runs inside the product: a more emotional voice for the caller and coach, acting out the tone of each line |
-| Claude API (`claude-opus-5-5`) | Supported as an alternative provider for the same two jobs |
-| Browser Web Speech API | Speech recognition and speech output in the product (not a generative AI tool, listed for completeness) |
+| Claude Code (desktop app, Claude Fable 5.2) | Coming up with the idea, writing the code, first drafts of the docs, testing in a browser |
+| Claude (claude.ai, Claude Opus 5.5) | Reviewing the code for bugs, and rewriting this file and `WRITEUP.md` |
+| Google Gemini API (`gemini-3.5-flash-lite`, `gemini-3.5-flash` and a few others) | Inside the app: plays the scammer and writes the coaching |
+| ElevenLabs API (optional, `eleven_v4_turbo`) | Inside the app: a more expressive voice for the caller and coach |
+| Claude API (`claude-opus-5-5`) | Inside the app: an alternative to Gemini for the same two jobs |
+| Browser Web Speech API | Speech recognition and the default voice (not generative AI, but listed anyway) |
 
 ## How I used Claude Code
 
-**Choosing the project.** I pasted the challenge brief into Claude Code and asked what was being asked for, then asked for project suggestions. It proposed five ideas across the tracks with a note on why voice suited each and how risky each was to build in a day. It recommended the scam-call practice partner, and I went with that recommendation.
+Claude Code wrote the first version of every file in this repo, and it made most of the big design decisions. What I did was pick the idea, test it by actually talking to it, find what was broken, and decide what needed to change.
 
-**Building.** Claude Code wrote the first version of every file in this repository in one session: the Node server, the scenario scripts, the Claude prompts, the browser voice loop, the styles, and the unit tests. It made the main design decisions and explained them as it went, including:
+I started by pasting the challenge brief into Claude Code and asking what it was really asking for, then asked for project ideas. It came back with five, each with a note on why voice suited it and how risky it would be to build in a day. It recommended the scam-call one, and I went with that.
 
-- turn-taking instead of full duplex, so the microphone does not pick up the caller's voice
-- streaming the caller's reply and speaking it sentence by sentence to cut the wait
-- a made-up identity with known secrets, so leaks can be detected by exact matching in code
-- a scripted fallback so the app runs with no API key and survives a failed API call
+It built everything in one session: the server, the scenarios, the prompts, the voice loop in the browser, the styling and the tests. Along the way it explained the main decisions. The app takes turns instead of letting both sides talk at once, so the mic doesn't pick up the caller. The caller's reply is streamed and spoken a sentence at a time so you're not left waiting. You play a made-up identity, so leaks can be checked exactly. And there's a scripted caller to fall back on, so the app still works with no API key.
 
-**Testing.** Claude Code ran the unit tests (`npm test`, 8 passing) and drove a full practice call in its built-in browser using the typed-reply fallback, because that browser has no microphone access. That run caught one bug, where the spoken score and the on-screen score could disagree after the leak cap was applied, which it then fixed. It also started the server with an invalid API key, for each provider, to confirm that a failed AI call falls back to the scripted caller.
+To test it, Claude Code ran the unit tests and went through a whole call in its own browser, typing replies because that browser has no microphone. That found a bug where the score it said out loud didn't always match the one on screen, and it fixed it. It also tried starting the server with a bad key for each provider, to make sure a failed AI call drops back to the scripted caller.
 
-**Changing provider.** The first version called only the Claude API. Claude Pro does not include API access, so I asked Claude Code to add Google Gemini, which has a free tier. It read the installed Gemini SDK's README and type definitions to get the call shapes, then restructured `lib/ai.js` so the prompts are shared and each provider has two small functions.
+The first version only worked with the Claude API, but Claude Pro doesn't come with API access, so I asked it to add Gemini, which has a free tier. It read the Gemini SDK docs and restructured `lib/ai.js` so both providers share the same prompts. Once my Gemini key was in, it timed the different Flash models and set them to think as little as possible, so the caller starts talking after about a second. It checked the AI caller and debrief with typed replies, and I tested the voice side myself in Chrome with a microphone.
 
-**Live testing.** With my Gemini key in place, Claude Code timed the available Gemini Flash models. The two newest timed out on my key, so the default became `gemini-3.5-flash` with minimal thinking, which starts replying in about a second. It then checked the AI caller and the AI debrief end to end using typed replies. I tested the voice path myself in Chrome with a microphone.
+That's when I found the biggest problem. I gave the caller a fake birthday and a fake PIN, and the debrief told me I'd given my details away. I asked Claude Code to check whether what I said actually matched the card, to make the caller sound more emotional, and to make the coach smarter. It changed four things.
 
-**Second round, after I tested it by voice.** I found a real flaw: I gave the caller a made-up birthday and PIN, and the review said I had given my information away. I asked Claude Code to check whether what I said was actually the information on the card, and to make the product more sophisticated, with a more emotional voice and better judgement from the reviewer. It made these changes:
+1. The code now tells real leaks apart from made-up numbers, and the caller reacts when details don't match.
+2. The score is calculated from a fixed rubric instead of being picked by the AI, and the coach's quotes are checked against the transcript.
+3. The caller now picks a tone for every line.
+4. When the main Gemini model ran out of free requests during testing, it added automatic switching between models. The caller now starts on `gemini-3.5-flash-lite` and the coach on `gemini-3.5-flash`.
 
-- *Real versus made-up details.* Code now separates real leaks from made-up numbers, the coach is told the difference, and the caller reacts when details "do not match".
-- *A reviewer whose score is calculated, not guessed.* The AI coach now reports three yes/no findings and writes the coaching. The score comes from a fixed rubric in `lib/analysis.js`, and the coach's quotes are checked against the transcript.
-- *Emotion.* The caller model picks a tone for every line, which drives the voice and is shown in the transcript and debrief.
-- *Voice.* Claude Code tested Gemini's speech model first and found it is not available on the free tier, so it preferred the browser's natural voices and added ElevenLabs as an optional upgrade.
-- *Quota.* During testing the main Gemini model hit its free limit of about 20 requests a day, so Claude Code added automatic rotation across models.
+It tried Gemini's own speech model too, but that isn't on the free tier, so it used the browser's "Natural" voices and added ElevenLabs as an optional extra. By the end of that round there were 16 unit tests, and it replayed my fake birthday and PIN against Gemini to check the fix.
 
-It verified this round with 16 unit tests and live calls against Gemini using typed replies, including replaying my made-up birthday and PIN case.
+When I added an ElevenLabs key, it listed the voices on my account, picked one for each character, and compared clip lengths to make sure the acting directions weren't being read out loud. There was a long pause before the caller spoke, so it started voicing the first sentence straight away and limited each line to 35 words. It can't hear audio, so whether the voices actually sounded right was down to me.
 
-**ElevenLabs.** After I added an ElevenLabs key, Claude Code listed the voices on my account, chose one per character, and checked by comparing clip lengths that the acting directions were not being read aloud. Its first test showed a 6 second wait before the caller spoke, so it changed the app to voice the first sentence immediately and capped the caller's lines at 35 words, which brought the wait to under 2 seconds. Claude Code cannot hear audio, so judging how the voices actually sound was my job.
+It also wrote the README and the first drafts of this file and the write-up.
 
-**Documents.** Claude Code drafted the README, the write-up, and this file.
+## How I used Claude (claude.ai)
 
-## How the product uses AI
+Once the build was done, I had Claude read the whole repo and explain it to me. It found a few bugs in the scoring and checking logic. For example, saying a money amount like "5,000" gets counted as a made-up detail. It then rewrote this file and `WRITEUP.md` so they sound more like me, and fixed claims that didn't match what the code actually does.
 
-- **The caller.** Each turn, the server sends the conversation so far to the model (Gemini or Claude) with a system prompt that sets up the training simulation, the scammer's role and goal, and rules for spoken output (short sentences, no markup, fictional organisations only). The reply is streamed. Each line starts with a tone in curly braces, such as `{urgent}`, and the marker `[END_CALL]` lets the model end the call.
-- **The coach.** After the call, one request sends the transcript (with the caller's tone on each line and any long pauses before my replies), the call length, who ended it, and the results of the code-based checks. The response is constrained to a JSON schema: verdict, spoken summary, three yes/no findings, tactics, key moments, and a line to say next time.
-- **What is deliberately not left to AI.** Whether a secret was leaked, and whether numbers I gave were made up, is decided by exact matching in `lib/analysis.js`. The score is calculated there from a fixed rubric. Quotes in the coach's report are checked against the transcript, and a bluff can never be reported as a leak.
+## How the app uses AI
+
+On every turn, the server sends the conversation so far to Gemini or Claude, with a system prompt that sets up the training simulation, who the scammer is and what they're after, and some rules: short lines, no formatting, and only made-up organisations. The reply streams back. Each line starts with a tone in curly braces, and `[END_CALL]` lets the model hang up.
+
+After the call, one request goes to the coach. It gets the transcript (with the caller's tone on each line and any long pauses before my replies), how long the call took, who hung up, and what the code found. Its reply has to fit a fixed JSON format: a verdict, a summary to read out, three yes/no answers, the tactics used, my key moments, and a line to try next time.
+
+Some things deliberately aren't left to the AI. Whether a secret leaked, and whether a number was made up, is decided by exact matching in `lib/analysis.js`, and the score is worked out there too. The coach's three yes/no answers still decide 30 of the 100 points. The coach is told the leak result is final, quotes that don't appear in the transcript are thrown out, and a fake detail that's been labelled as "gave ground" is relabelled as a bluff. The summary it reads out isn't checked, though, so it could still describe a bluff badly.
